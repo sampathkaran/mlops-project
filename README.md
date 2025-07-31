@@ -10,3 +10,10 @@ mlflow server --backend-store-uri sqlite:///mlflow.db
 
 # command to convert notebook to python file
 jupyter nbconvert --to=script <filename>
+
+# Prefect repo link for setup
+https://github.com/discdiver/prefect-mlops-zoomcamp.git
+
+$ conda create -n prefect-env python=3.9.12
+$ pip install -r requirements.txt 
+$ prefect server start

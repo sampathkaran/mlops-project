@@ -27,6 +27,7 @@ from prefect import flow, task
 
 # Data ingestion & tranformation
 
+@task(retries=3, retry_delay_seconds=2)
 def read_dataframe(year, month):
     """Read data into Dataframe"""
     df = pd.read_parquet(f"https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_{year}-{month:02d}.parquet")
@@ -45,7 +46,7 @@ def read_dataframe(year, month):
 
 
 # preparing the data for ML
-
+@task
 def create_X(df, dv=None):
 
     categorical = ['PU_DO'] #'PULocationID', 'DOLocationID']
@@ -63,10 +64,10 @@ def create_X(df, dv=None):
     return X, dv
 
 # Training the model
-
+@task(log_prints=True)
 def train_model(X_train, y_train, X_val, y_val, dv):
 
-    mlflow.set_experiment("taxi203-exp")
+    mlflow.set_experiment("taxi-prediction-prefect")
     with mlflow.start_run():
         train = xgb.DMatrix(X_train, label=y_train)
         valid = xgb.DMatrix(X_val, label=y_val)
@@ -118,7 +119,7 @@ def train_model(X_train, y_train, X_val, y_val, dv):
             json.dump(run_info, f, indent=4)
 
 # main calling function
-
+@flow
 def run(year, month):
     df_train = read_dataframe(year=year, month=month)
     df_val   = read_dataframe(year=year, month=month + 1)
